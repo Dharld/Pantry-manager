@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import FormStepper from "@/components/ui/form-stepper";
 import { toast } from "@/components/ui/use-toast";
 import { addProduct } from "@/lib/firebase";
+import { Loader } from "@/components/ui/loader";
 
 // Schema for form validation
 export const productSchema = z.object({
@@ -45,6 +46,7 @@ export const productSchema = z.object({
 });
 
 export default function AddProductPage() {
+  const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [open, setOpen] = useState(true);
   const [step, setStep] = useState(1);
@@ -75,10 +77,17 @@ export default function AddProductPage() {
   };
 
   async function onSubmit(values) {
-    console.log(values);
+    setIsLoading(true);
     try {
       await addProduct(values);
+      toast({
+        title: "Product added",
+        description: "The product has been added successfully.",
+        type: "success",
+      });
       setOpen(false);
+      // Client -> Server (We need a refresh to trigger the call to getProducts)
+      router.push("/products");
     } catch (error) {
       console.error("Error adding product:", error);
       toast({
@@ -87,6 +96,8 @@ export default function AddProductPage() {
           "An error occurred while adding the product. Please try again later.",
         type: "error",
       });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -297,7 +308,11 @@ export default function AddProductPage() {
                   type="submit"
                   className="flex-1 bg-accent-primary hover:bg-accent-secondary"
                 >
-                  Submit
+                  {isLoading ? (
+                    <Loader sm={true} className="border-t-white" />
+                  ) : (
+                    "Submit"
+                  )}
                 </Button>
               )}
             </div>
